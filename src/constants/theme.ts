@@ -1,26 +1,37 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://unistyl.es/), etc.
+ * App design tokens. Colors mirror Tailor-Track MUI theme;
+ * component theming is provided by React Native Paper (see `@/theme`).
  */
 
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
+import { brandColors } from '@/theme/colors';
+import { FontFamily } from '@/theme/fonts';
+
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: brandColors.light.text,
+    textSecondary: brandColors.light.textSecondary,
+    background: brandColors.light.background,
+    backgroundElement: brandColors.light.surfaceVariant,
+    backgroundSelected: brandColors.light.primaryContainer,
+    primary: brandColors.light.primary,
+    secondary: brandColors.light.secondary,
+    surface: brandColors.light.surface,
+    outline: brandColors.light.outline,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: brandColors.dark.text,
+    textSecondary: brandColors.dark.textSecondary,
+    background: brandColors.dark.background,
+    backgroundElement: brandColors.dark.surfaceVariant,
+    backgroundSelected: brandColors.dark.primaryContainer,
+    primary: brandColors.dark.primary,
+    secondary: brandColors.dark.secondary,
+    surface: brandColors.dark.surface,
+    outline: brandColors.dark.outline,
   },
 } as const;
 
@@ -28,19 +39,15 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    sans: FontFamily.regular,
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
+    rounded: FontFamily.regular,
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: FontFamily.regular,
     serif: 'serif',
-    rounded: 'normal',
+    rounded: FontFamily.regular,
     mono: 'monospace',
   },
   web: {
