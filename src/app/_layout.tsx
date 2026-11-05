@@ -1,9 +1,12 @@
+import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { AuthProvider, useSession } from '@/providers/AuthProvider';
+import SnackbarProvider from '@/providers/SnackbarProvider';
 import ThemeProvider from '@/providers/ThemeProvider';
 import { workSansFonts } from '@/theme';
 
@@ -23,9 +26,36 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AuthProvider>
+          <SnackbarProvider>
+            <RootNavigator />
+          </SnackbarProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function RootNavigator() {
+  const { session, isLoading } = useSession();
+
+  if (isLoading) {
+    return <LoadingScreen message="Starting Zynstitch…" />;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Protected guard={!session} redirectTo="/customers">
+        <Stack.Screen name="login" />
+        <Stack.Screen name="forgot-password" />
+        <Stack.Screen name="reset-password" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session} redirectTo="/login">
+        <Stack.Screen name="(app)" />
+      </Stack.Protected>
+    </Stack>
   );
 }
