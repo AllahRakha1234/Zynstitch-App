@@ -1,7 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useFormik } from 'formik';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Avatar, Button, Divider, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Avatar, Button, Text, TextInput } from 'react-native-paper';
 import * as Yup from 'yup';
 
 import { changePassword, updateUserProfile } from '@/api';
@@ -11,14 +10,12 @@ import { useTheme } from '@/hooks/use-theme';
 import { t } from '@/i18n/en';
 import { useSession } from '@/providers/AuthProvider';
 import { useSnackbar } from '@/providers/SnackbarProvider';
-import { useThemeMode } from '@/providers/ThemeProvider';
 import { changePasswordSchema } from '@/validators/auth.validations';
 
 export default function ProfileScreen() {
   const colors = useTheme();
-  const { user, updateUser, signOut } = useSession();
+  const { user, updateUser } = useSession();
   const { showSuccess, showError } = useSnackbar();
-  const { mode, setMode, language, setLanguage } = useThemeMode();
 
   const profileForm = useFormik({
     enableReinitialize: true,
@@ -114,32 +111,6 @@ export default function ProfileScreen() {
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
-        <Text variant="titleLarge">Appearance</Text>
-        <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
-          Choose how Zynstitch looks on this device.
-        </Text>
-        <SegmentedButtons
-          value={mode}
-          onValueChange={(value) => setMode(value as 'light' | 'dark')}
-          buttons={[
-            { value: 'light', label: 'Light', icon: 'white-balance-sunny' },
-            { value: 'dark', label: 'Dark', icon: 'moon-waning-crescent' },
-          ]}
-        />
-
-        <Divider style={styles.divider} />
-        <Text variant="titleMedium">Language</Text>
-        <SegmentedButtons
-          value={language}
-          onValueChange={(value) => setLanguage(value as 'en' | 'ur')}
-          buttons={[
-            { value: 'en', label: 'English' },
-            { value: 'ur', label: 'اردو' },
-          ]}
-        />
-      </View>
-
-      <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
         <Text variant="titleLarge">Change password</Text>
         <PasswordField
           label="Current password"
@@ -165,15 +136,6 @@ export default function ProfileScreen() {
         </Button>
       </View>
 
-      <Button
-        mode="outlined"
-        icon={({ size, color }) => <MaterialCommunityIcons name="logout" size={size} color={color} />}
-        textColor="#b3261e"
-        onPress={() => void signOut()}
-        style={styles.signOut}
-      >
-        Sign out
-      </Button>
     </ScrollView>
   );
 }
@@ -204,12 +166,5 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderRadius: 16,
     borderWidth: 1,
-  },
-  divider: {
-    marginVertical: Spacing.two,
-  },
-  signOut: {
-    marginTop: Spacing.one,
-    borderColor: '#b3261e',
   },
 });
