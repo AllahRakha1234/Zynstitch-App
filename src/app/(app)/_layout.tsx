@@ -1,6 +1,9 @@
-import { Drawer } from 'expo-router/drawer';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Tabs } from 'expo-router';
+import { Platform, StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppDrawerContent } from '@/components/sidebar/AppDrawerContent';
 import { getAllowedMenu } from '@/constants/menu';
 import { useTheme } from '@/hooks/use-theme';
 import { useSession } from '@/providers/AuthProvider';
@@ -10,31 +13,73 @@ export const unstable_settings = {
   initialRouteName: 'customers',
 };
 
-export default function AppDrawerLayout() {
+export default function AppTabsLayout() {
   const colors = useTheme();
+  const insets = useSafeAreaInsets();
   const { user } = useSession();
-  const canManageUsers = getAllowedMenu(user?.role ?? ROLES.ADMIN).some(
-    (item) => item.href === '/users',
-  );
+  const menu = getAllowedMenu(user?.role ?? ROLES.ADMIN);
+  const canManageUsers = menu.some((item) => item.href === '/users');
+
+  const optionsFor = (href: (typeof menu)[number]['href']) => {
+    const item = menu.find((entry) => entry.href === href)!;
+
+    return {
+      title: item.label,
+      tabBarAccessibilityLabel: item.label,
+      tabBarLabel: ({ focused }: { focused: boolean }) =>
+        focused ? <Text style={[styles.activeLabel, { color: colors.primary }]}>{item.label}</Text> : null,
+      tabBarIcon: ({ focused, size }: { focused: boolean; size: number }) => (
+        <MaterialCommunityIcons
+          name={item.icon}
+          size={size}
+          color={focused ? colors.primary : colors.textSecondary}
+        />
+      ),
+    };
+  };
 
   return (
-    <Drawer
-      drawerContent={() => <AppDrawerContent />}
+    <Tabs
       screenOptions={{
-        headerTintColor: colors.text,
-        headerStyle: { backgroundColor: colors.surface },
-        drawerStyle: { backgroundColor: colors.surface, width: 280 },
+        headerShown: false,
         sceneStyle: { backgroundColor: colors.background },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarHideOnKeyboard: true,
+        tabBarItemStyle: styles.tabItem,
+        tabBarLabelStyle: styles.tabLabel,
+        tabBarStyle: {
+          height: 62 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 8 : 6),
+          backgroundColor: colors.surface,
+          borderTopColor: colors.outline,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          elevation: 10,
+        },
       }}
     >
-      <Drawer.Screen name="customers" options={{ title: 'Customers' }} />
-      <Drawer.Screen name="measurements" options={{ title: 'Measurements' }} />
-      <Drawer.Screen name="orders" options={{ title: 'Orders' }} />
-      <Drawer.Screen name="jobs" options={{ title: 'Jobs' }} />
-      <Drawer.Protected guard={canManageUsers}>
-        <Drawer.Screen name="users" options={{ title: 'Users' }} />
-      </Drawer.Protected>
-      <Drawer.Screen name="profile" options={{ title: 'Profile' }} />
-    </Drawer>
+      <Tabs.Screen name="customers" options={optionsFor('/customers')} />
+      <Tabs.Screen name="measurements" options={optionsFor('/measurements')} />
+      <Tabs.Screen name="orders" options={optionsFor('/orders')} />
+      <Tabs.Screen name="jobs" options={optionsFor('/jobs')} />
+      <Tabs.Screen name="profile" options={optionsFor('/profile')} />
+      <Tabs.Protected guard={canManageUsers}>
+        <Tabs.Screen name="users" options={optionsFor('/users')} />
+      </Tabs.Protected>
+    </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabItem: {
+    paddingVertical: 2,
+  },
+  tabLabel: {
+    marginTop: 2,
+  },
+  activeLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+});

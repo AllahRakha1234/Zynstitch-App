@@ -1,5 +1,5 @@
-import type { ComponentProps } from 'react';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { ComponentProps } from 'react';
 
 import { ROLES, type UserRole } from '@/types/users.types';
 
@@ -18,6 +18,7 @@ export const APP_MENU: AppMenuItem[] = [
   { label: 'Measurements', href: '/measurements', icon: 'human-male-height' },
   { label: 'Orders', href: '/orders', icon: 'clipboard-list' },
   { label: 'Jobs', href: '/jobs', icon: 'briefcase' },
+  { label: 'Profile', href: '/profile', icon: 'account-circle' },
   {
     label: 'Users',
     href: '/users',

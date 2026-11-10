@@ -20,12 +20,16 @@ import { PaperProvider } from 'react-native-paper';
 import { brandColors, getPaperTheme, type ThemeMode } from '@/theme';
 
 const STORAGE_KEY = 'themeMode';
+const LANGUAGE_STORAGE_KEY = 'appLanguage';
+export type AppLanguage = 'en' | 'ur';
 
 interface ThemeContextValue {
   mode: ThemeMode;
   isDark: boolean;
+  language: AppLanguage;
   toggleTheme: () => void;
   setMode: (mode: ThemeMode) => void;
+  setLanguage: (language: AppLanguage) => void;
 }
 
 const ThemeModeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -47,6 +51,7 @@ export default function ThemeProvider({ children }: Props) {
   const [mode, setModeState] = useState<ThemeMode>(
     systemScheme === 'dark' ? 'dark' : 'light',
   );
+  const [language, setLanguageState] = useState<AppLanguage>('en');
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -54,9 +59,15 @@ export default function ThemeProvider({ children }: Props) {
 
     (async () => {
       try {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        if (!cancelled && (stored === 'light' || stored === 'dark')) {
-          setModeState(stored);
+        const [storedMode, storedLanguage] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY),
+          AsyncStorage.getItem(LANGUAGE_STORAGE_KEY),
+        ]);
+        if (!cancelled && (storedMode === 'light' || storedMode === 'dark')) {
+          setModeState(storedMode);
+        }
+        if (!cancelled && (storedLanguage === 'en' || storedLanguage === 'ur')) {
+          setLanguageState(storedLanguage);
         }
       } finally {
         if (!cancelled) setHydrated(true);
@@ -75,8 +86,19 @@ export default function ThemeProvider({ children }: Props) {
     });
   }, [mode, hydrated]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language).catch(() => {
+      // Preference persistence is best-effort; the selection still works in-memory.
+    });
+  }, [language, hydrated]);
+
   const setMode = useCallback((next: ThemeMode) => {
     setModeState(next);
+  }, []);
+
+  const setLanguage = useCallback((next: AppLanguage) => {
+    setLanguageState(next);
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -108,10 +130,12 @@ export default function ThemeProvider({ children }: Props) {
     () => ({
       mode,
       isDark: mode === 'dark',
+      language,
       toggleTheme,
       setMode,
+      setLanguage,
     }),
-    [mode, toggleTheme, setMode],
+    [mode, language, toggleTheme, setMode, setLanguage],
   );
 
   return (
