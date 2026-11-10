@@ -27,7 +27,7 @@ export default function LoginScreen() {
       }
       showSuccess(t(result.message));
       helpers.setSubmitting(false);
-      router.replace('/customers');
+      router.replace('/');
     },
   });
 

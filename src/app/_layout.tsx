@@ -10,6 +10,10 @@ import SnackbarProvider from '@/providers/SnackbarProvider';
 import ThemeProvider from '@/providers/ThemeProvider';
 import { workSansFonts } from '@/theme';
 
+export const unstable_settings = {
+  initialRouteName: 'welcome',
+};
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -47,8 +51,8 @@ function RootNavigator() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Protected guard={!session} redirectTo="/customers">
+      <Stack.Protected guard={!session} redirectTo="/">
+        <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
         <Stack.Screen name="forgot-password" />
         <Stack.Screen name="reset-password" />
