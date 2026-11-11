@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { PanResponder, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -45,6 +45,20 @@ export function HomeHeroSlider({ onContactPress }: Props) {
   const { isAuthenticated } = useSession();
   const [index, setIndex] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_event, gestureState) =>
+          Math.abs(gestureState.dx) > 12 && Math.abs(gestureState.dy) < 30,
+        onPanResponderRelease: (_event, gestureState) => {
+          if (Math.abs(gestureState.dx) < 40) return;
+          setIndex((current) =>
+            (current + (gestureState.dx < 0 ? 1 : -1) + slides.length) % slides.length,
+          );
+        },
+      }),
+    [],
+  );
   const slide = slides[index];
   const heroHeight = Math.max(height * 0.72, 520);
 
@@ -63,7 +77,11 @@ export function HomeHeroSlider({ onContactPress }: Props) {
   );
 
   return (
-    <View style={[styles.hero, { height: heroHeight }]}>
+    <View
+      {...panResponder.panHandlers}
+      style={[styles.hero, { height: heroHeight }]}
+      accessibilityHint="Swipe left or right to change slides"
+    >
       <Image
         source={slide.image}
         style={StyleSheet.absoluteFill}
