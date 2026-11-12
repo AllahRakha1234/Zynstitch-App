@@ -6,8 +6,8 @@ import { ListCard } from '@/components/shared/ListCard';
 import type { ICustomer } from '@/types/customer.types';
 
 export default function CustomersScreen() {
-  const load = useCallback(async (search: string) => {
-    const response = await fetchAllCustomers(0, 50, { search });
+  const load = useCallback(async (filters: Record<string, string>) => {
+    const response = await fetchAllCustomers(0, 50, filters);
     return {
       success: response.success,
       message: response.message,
@@ -19,7 +19,8 @@ export default function CustomersScreen() {
   return (
     <EntityListScreen<ICustomer>
       title="Customers"
-      searchPlaceholder="Search customers"
+      filters={[{ key: 'search', label: 'Search', type: 'text', placeholder: 'Search customers' }]}
+      topSafeArea
       load={load}
       keyExtractor={(item) => item._id ?? item.phone}
       emptyTitle="No customers yet"

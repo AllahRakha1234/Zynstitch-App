@@ -7,11 +7,12 @@ type Props = {
   title: string;
   subtitle?: string;
   meta?: string;
+  onPress?: () => void;
 };
 
-export function ListCard({ title, subtitle, meta }: Props) {
+export function ListCard({ title, subtitle, meta, onPress }: Props) {
   return (
-    <Card mode="outlined" style={styles.card}>
+    <Card mode="outlined" style={styles.card} onPress={onPress}>
       <Card.Content>
         <Text variant="titleMedium">{title}</Text>
         {subtitle ? (

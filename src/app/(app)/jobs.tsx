@@ -6,8 +6,8 @@ import { ListCard } from '@/components/shared/ListCard';
 import type { ExportJob } from '@/types/jobs.types';
 
 export default function JobsScreen() {
-  const load = useCallback(async (search: string) => {
-    const response = await fetchJobs(0, 50, { search });
+  const load = useCallback(async (filters: Record<string, string>) => {
+    const response = await fetchJobs(0, 50, filters);
     return {
       success: response.success,
       message: response.message,
@@ -19,7 +19,8 @@ export default function JobsScreen() {
   return (
     <EntityListScreen<ExportJob>
       title="Jobs"
-      searchPlaceholder="Search export jobs"
+      filters={[{ key: 'search', label: 'Search', type: 'text', placeholder: 'Search export jobs' }]}
+      showRefresh
       load={load}
       keyExtractor={(item) => item._id ?? item.fileName ?? item.entity}
       emptyTitle="No export jobs"

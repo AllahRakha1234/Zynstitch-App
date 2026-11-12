@@ -6,8 +6,8 @@ import { ListCard } from '@/components/shared/ListCard';
 import type { IUser } from '@/types/users.types';
 
 export default function UsersScreen() {
-  const load = useCallback(async (search: string) => {
-    const response = await fetchAllAdminUsers(0, 50, { search });
+  const load = useCallback(async (filters: Record<string, string>) => {
+    const response = await fetchAllAdminUsers(0, 50, filters);
     return {
       success: response.success,
       message: response.message,
@@ -19,7 +19,7 @@ export default function UsersScreen() {
   return (
     <EntityListScreen<IUser>
       title="Users"
-      searchPlaceholder="Search users"
+      filters={[{ key: 'search', label: 'Search', type: 'text', placeholder: 'Search users' }]}
       load={load}
       keyExtractor={(item) => item._id ?? item.email}
       emptyTitle="No users"

@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 
 import { fetchAllMeasurements } from '@/api';
@@ -6,8 +7,9 @@ import { ListCard } from '@/components/shared/ListCard';
 import type { IMeasurement } from '@/types/measurements.types';
 
 export default function MeasurementsScreen() {
-  const load = useCallback(async (search: string) => {
-    const response = await fetchAllMeasurements(0, 50, { search });
+  const router = useRouter();
+  const load = useCallback(async (filters: Record<string, string>) => {
+    const response = await fetchAllMeasurements(0, 50, filters);
     return {
       success: response.success,
       message: response.message,
@@ -19,7 +21,8 @@ export default function MeasurementsScreen() {
   return (
     <EntityListScreen<IMeasurement>
       title="Measurements"
-      searchPlaceholder="Search measurements"
+      filters={[{ key: 'search', label: 'Search', type: 'text', placeholder: 'Search measurements' }]}
+      topSafeArea
       load={load}
       keyExtractor={(item) => item._id ?? item.measurementName}
       emptyTitle="No measurements yet"
@@ -29,6 +32,9 @@ export default function MeasurementsScreen() {
           title={item.measurementName}
           subtitle={item.customerName ?? item.customerId}
           meta={item.measurementDate}
+          onPress={() => {
+            if (item._id) router.push(`/measurements/${item._id}`);
+          }}
         />
       )}
     />
