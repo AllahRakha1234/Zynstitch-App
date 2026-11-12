@@ -7,7 +7,7 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export type AppMenuItem = {
   label: string;
-  href: '/measurements' | '/jobs' | '/users' | '/settings' | '/profile';
+  href: '/measurements' | '/jobs' | '/users' | '/profile';
   icon: IconName;
   allowedRoles?: UserRole[];
 };
@@ -50,7 +50,6 @@ export const MORE_MENU_SECTIONS: readonly {
   {
     title: 'Account',
     items: [
-      { label: 'Settings', href: '/settings', icon: 'cog-outline' },
       { label: 'Profile', href: '/profile', icon: 'account-circle-outline' },
       { label: 'Logout', action: 'logout', icon: 'logout' },
     ],

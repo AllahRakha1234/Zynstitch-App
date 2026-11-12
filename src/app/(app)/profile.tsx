@@ -1,6 +1,6 @@
 import { useFormik } from 'formik';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Avatar, Button, Text, TextInput } from 'react-native-paper';
+import { Avatar, Button, Divider, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 import * as Yup from 'yup';
 
 import { changePassword, updateUserProfile } from '@/api';
@@ -10,12 +10,15 @@ import { useTheme } from '@/hooks/use-theme';
 import { t } from '@/i18n/en';
 import { useSession } from '@/providers/AuthProvider';
 import { useSnackbar } from '@/providers/SnackbarProvider';
+import { useThemeMode } from '@/providers/ThemeProvider';
 import { changePasswordSchema } from '@/validators/auth.validations';
 
 export default function ProfileScreen() {
   const colors = useTheme();
   const { user, updateUser } = useSession();
   const { showSuccess, showError } = useSnackbar();
+  const { mode, setMode, language, setLanguage } = useThemeMode();
+  const profilePhotoUri = user?.profilePhoto?.startsWith('http') ? user.profilePhoto : undefined;
 
   const profileForm = useFormik({
     enableReinitialize: true,
@@ -70,11 +73,15 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.content}
     >
       <View style={[styles.accountCard, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
-        <Avatar.Text
-          size={56}
-          label={(user?.name ?? 'U').charAt(0).toUpperCase()}
-          style={{ backgroundColor: colors.primary }}
-        />
+        {profilePhotoUri ? (
+          <Avatar.Image size={64} source={{ uri: profilePhotoUri }} />
+        ) : (
+          <Avatar.Text
+            size={64}
+            label={(user?.name ?? 'U').charAt(0).toUpperCase()}
+            style={{ backgroundColor: colors.primary }}
+          />
+        )}
         <View style={styles.accountCopy}>
           <Text variant="titleMedium">{user?.name || 'User'}</Text>
           <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
@@ -84,6 +91,31 @@ export default function ProfileScreen() {
             {user?.role?.replace('_', ' ') ?? 'ADMIN'}
           </Text>
         </View>
+      </View>
+
+      <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
+        <Text variant="titleLarge">Appearance</Text>
+        <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
+          Choose how Zynstitch looks on this device.
+        </Text>
+        <SegmentedButtons
+          value={mode}
+          onValueChange={(value) => setMode(value as 'light' | 'dark')}
+          buttons={[
+            { value: 'light', label: 'Light', icon: 'white-balance-sunny' },
+            { value: 'dark', label: 'Dark', icon: 'moon-waning-crescent' },
+          ]}
+        />
+        <Divider style={styles.divider} />
+        <Text variant="titleMedium">Language</Text>
+        <SegmentedButtons
+          value={language}
+          onValueChange={(value) => setLanguage(value as 'en' | 'ur')}
+          buttons={[
+            { value: 'en', label: 'English' },
+            { value: 'ur', label: 'اردو' },
+          ]}
+        />
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
@@ -166,5 +198,8 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderRadius: 16,
     borderWidth: 1,
+  },
+  divider: {
+    marginVertical: Spacing.two,
   },
 });
