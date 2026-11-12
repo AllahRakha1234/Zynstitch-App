@@ -72,7 +72,7 @@ export function HomeHeroSlider({ onContactPress }: Props) {
   }, []);
 
   const ctaHref = useMemo(
-    () => (isAuthenticated ? '/customers' : '/login'),
+    () => (isAuthenticated ? '/' : '/login'),
     [isAuthenticated],
   );
 

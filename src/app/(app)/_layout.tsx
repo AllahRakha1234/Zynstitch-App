@@ -17,7 +17,6 @@ export default function AppLayout() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="measurements" />
       <Stack.Screen name="jobs" />
-      <Stack.Screen name="settings" />
       <Stack.Screen name="profile" />
       <Stack.Protected guard={canManageUsers}>
         <Stack.Screen name="users" />
