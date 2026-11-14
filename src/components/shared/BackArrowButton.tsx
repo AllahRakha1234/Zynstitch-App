@@ -1,7 +1,7 @@
+import { useTheme } from '@/hooks/use-theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, type Href } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
-import { useTheme } from '@/hooks/use-theme';
 
 type Props = {
   fallbackHref: Href;

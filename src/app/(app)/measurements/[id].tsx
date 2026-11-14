@@ -5,9 +5,9 @@ import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchMeasurementById } from '@/api';
+import { BackArrowButton } from '@/components/shared/BackArrowButton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
-import { BackArrowButton } from '@/components/shared/BackArrowButton';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { IMeasurement } from '@/types/measurements.types';
