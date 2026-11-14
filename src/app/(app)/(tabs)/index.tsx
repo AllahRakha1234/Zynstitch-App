@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchAllCustomers, fetchAllMeasurements, fetchAllOrders } from '@/api';
 import { Spacing } from '@/constants/theme';
@@ -12,6 +13,7 @@ import type { IOrder } from '@/types/orders.types';
 
 export default function DashboardScreen() {
   const colors = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useSession();
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export default function DashboardScreen() {
   return (
     <ScrollView
       style={[styles.page, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.four }]}
     >
       <View style={styles.header}>
         <View>

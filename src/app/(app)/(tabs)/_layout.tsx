@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Tabs, usePathname, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Animated, Modal, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,11 +18,24 @@ export const unstable_settings = {
 export default function AppTabsLayout() {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const router = useRouter();
   const pathname = usePathname();
   const { user, signOut } = useSession();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [drawerProgress] = useState(() => new Animated.Value(0));
+  const drawerWidth = Math.min(screenWidth * 0.8, 320);
   const moreSections = getMoreMenuSections(user?.role ?? ROLES.ADMIN);
+
+  useEffect(() => {
+    if (!drawerVisible) return;
+    drawerProgress.setValue(0);
+    Animated.timing(drawerProgress, {
+      toValue: 1,
+      duration: 260,
+      useNativeDriver: true,
+    }).start();
+  }, [drawerVisible, drawerProgress]);
 
   const optionsFor = (item: (typeof BOTTOM_TABS)[number], more = false) => ({
     title: item.label,
@@ -54,7 +67,15 @@ export default function AppTabsLayout() {
     ]);
   };
 
-  const closeDrawer = () => setDrawerVisible(false);
+  const closeDrawer = () => {
+    Animated.timing(drawerProgress, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setDrawerVisible(false);
+    });
+  };
 
   return (
     <>
@@ -96,21 +117,45 @@ export default function AppTabsLayout() {
       <Modal
         visible={drawerVisible}
         transparent
-        animationType="fade"
+        animationType="none"
         statusBarTranslucent
         onRequestClose={closeDrawer}
       >
         <View style={styles.modalRoot}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Close navigation menu"
-            onPress={closeDrawer}
-            style={styles.scrim}
-          />
-          <SafeAreaView
-            edges={['top', 'bottom']}
-            style={[styles.drawer, { backgroundColor: colors.surface, borderColor: colors.outline }]}
+          <Animated.View
+            style={[
+              styles.scrim,
+              {
+                opacity: drawerProgress.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }),
+              },
+            ]}
           >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close navigation menu"
+              onPress={closeDrawer}
+              style={styles.scrimPressable}
+            />
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.drawer,
+              {
+                width: drawerWidth,
+                backgroundColor: colors.surface,
+                borderColor: colors.outline,
+                transform: [
+                  {
+                    translateX: drawerProgress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-drawerWidth, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <SafeAreaView edges={['top', 'bottom']} style={styles.drawerSafeArea}>
             <View style={styles.drawerHeader}>
               <View>
                 <Text variant="titleLarge" style={{ color: colors.primary, fontWeight: '800' }}>
@@ -201,7 +246,8 @@ export default function AppTabsLayout() {
                 </View>
               ))}
             </ScrollView>
-          </SafeAreaView>
+            </SafeAreaView>
+          </Animated.View>
         </View>
       </Modal>
     </>
@@ -228,9 +274,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.48)',
   },
+  scrimPressable: {
+    flex: 1,
+  },
   drawer: {
-    width: '86%',
-    maxWidth: 360,
     height: '100%',
     borderRightWidth: StyleSheet.hairlineWidth,
     elevation: 24,
@@ -238,6 +285,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 18,
     shadowOffset: { width: 4, height: 0 },
+  },
+  drawerSafeArea: {
+    flex: 1,
   },
   drawerHeader: {
     minHeight: 76,

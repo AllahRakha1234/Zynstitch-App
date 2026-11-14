@@ -1,36 +1,25 @@
-import { useCallback } from 'react';
-
-import { fetchAllCustomers } from '@/api';
-import { EntityListScreen } from '@/components/shared/EntityListScreen';
-import { ListCard } from '@/components/shared/ListCard';
-import type { ICustomer } from '@/types/customer.types';
+import { mockCustomers } from '@/api/mock/data';
+import { CollectionTableScreen } from '@/components/shared/CollectionTableScreen';
 
 export default function CustomersScreen() {
-  const load = useCallback(async (search: string) => {
-    const response = await fetchAllCustomers(0, 50, { search });
-    return {
-      success: response.success,
-      message: response.message,
-      items: response.data?.customers ?? [],
-      total: response.data?.total ?? 0,
-    };
-  }, []);
-
   return (
-    <EntityListScreen<ICustomer>
+    <CollectionTableScreen
       title="Customers"
-      searchPlaceholder="Search customers"
-      load={load}
-      keyExtractor={(item) => item._id ?? item.phone}
-      emptyTitle="No customers yet"
-      emptyDescription="Customer records from the backend will appear here."
-      renderItem={(item) => (
-        <ListCard
-          title={item.name}
-          subtitle={`${item.phone}${item.email ? ` · ${item.email}` : ''}`}
-          meta={item.address}
-        />
-      )}
+      singularTitle="Customer"
+      entity="customers"
+      initialData={mockCustomers}
+      fields={[
+        { key: 'name', label: 'Name', type: 'text', required: true },
+        { key: 'phone', label: 'Phone', type: 'text', required: true },
+        { key: 'email', label: 'Email', type: 'text', required: true },
+        { key: 'address', label: 'Address', type: 'text', required: true },
+      ]}
+      columns={[
+        { key: 'name', label: 'Name' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'email', label: 'Email' },
+        { key: 'address', label: 'Address' },
+      ]}
     />
   );
 }

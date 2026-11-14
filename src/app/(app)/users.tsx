@@ -1,36 +1,48 @@
-import { useCallback } from 'react';
-
-import { fetchAllAdminUsers } from '@/api';
-import { EntityListScreen } from '@/components/shared/EntityListScreen';
-import { ListCard } from '@/components/shared/ListCard';
-import type { IUser } from '@/types/users.types';
+import { mockUsers } from '@/api/mock/data';
+import { CollectionTableScreen } from '@/components/shared/CollectionTableScreen';
 
 export default function UsersScreen() {
-  const load = useCallback(async (search: string) => {
-    const response = await fetchAllAdminUsers(0, 50, { search });
-    return {
-      success: response.success,
-      message: response.message,
-      items: response.data?.users ?? [],
-      total: response.data?.total ?? 0,
-    };
-  }, []);
-
   return (
-    <EntityListScreen<IUser>
+    <CollectionTableScreen
       title="Users"
-      searchPlaceholder="Search users"
-      load={load}
-      keyExtractor={(item) => item._id ?? item.email}
-      emptyTitle="No users"
-      emptyDescription="Admin users from the backend will appear here."
-      renderItem={(item) => (
-        <ListCard
-          title={item.name}
-          subtitle={item.email}
-          meta={`${item.role} · ${item.status}`}
-        />
-      )}
+      singularTitle="User"
+      entity="users"
+      initialData={mockUsers}
+      fields={[
+        { key: 'name', label: 'Name', type: 'text', required: true },
+        { key: 'email', label: 'Email', type: 'text', required: true },
+        { key: 'password', label: 'Password', type: 'password', required: true, hideOnEdit: true },
+        {
+          key: 'role',
+          label: 'Role',
+          type: 'select',
+          required: true,
+          defaultValue: 'ADMIN',
+          options: [
+            { label: 'Admin', value: 'ADMIN' },
+            { label: 'Super admin', value: 'SUPER_ADMIN' },
+          ],
+        },
+        { key: 'companyName', label: 'Company', type: 'text' },
+        {
+          key: 'status',
+          label: 'Status',
+          type: 'select',
+          defaultValue: 'ACTIVE',
+          options: [
+            { label: 'Active', value: 'ACTIVE' },
+            { label: 'Blocked', value: 'BLOCKED' },
+          ],
+        },
+      ]}
+      columns={[
+        { key: 'name', label: 'Name' },
+        { key: 'email', label: 'Email', width: 200 },
+        { key: 'role', label: 'Role' },
+        { key: 'companyName', label: 'Company' },
+        { key: 'status', label: 'Status' },
+      ]}
+      canExport={false}
     />
   );
 }
