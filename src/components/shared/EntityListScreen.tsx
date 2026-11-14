@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { Button, Menu, Text, TextInput } from 'react-native-paper';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Button, IconButton, Menu, Text, TextInput } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -53,6 +53,8 @@ export function EntityListScreen<T>({
 }: Props<T>) {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const filterFieldWidth = screenWidth < 600 ? '100%' : 220;
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
   const [items, setItems] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
@@ -90,42 +92,50 @@ export function EntityListScreen<T>({
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: topSafeArea ? insets.top : 0 }]}>
       {filters.length || showRefresh ? (
-        <View style={styles.filterContainer}>
-          {filters.map((filter) =>
-            filter.type === 'text' ? (
-              <TextInput
-                key={filter.key}
+        <View style={[styles.filterPanel, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
+          <View style={styles.filterFields}>
+            {filters.map((filter) =>
+              filter.type === 'text' ? (
+                <TextInput
+                  key={filter.key}
+                  mode="outlined"
+                  label={filter.label}
+                  placeholder={filter.placeholder}
+                  value={selectedFilters[filter.key] ?? ''}
+                  onChangeText={(value) =>
+                    setSelectedFilters((current) => ({ ...current, [filter.key]: value }))
+                  }
+                  style={[styles.filterTextInput, { width: filterFieldWidth }]}
+                />
+              ) : (
+                <SelectFilter
+                  key={filter.key}
+                  filter={filter}
+                  value={selectedFilters[filter.key] ?? ''}
+                  width={filterFieldWidth}
+                  onChange={(value) =>
+                    setSelectedFilters((current) => ({ ...current, [filter.key]: value }))
+                  }
+                />
+              ),
+            )}
+          </View>
+          <View style={styles.filterActions}>
+            {filters.length ? (
+              <Button mode="outlined" onPress={() => setSelectedFilters({})} style={styles.resetButton}>
+                Reset filters
+              </Button>
+            ) : null}
+            {showRefresh ? (
+              <IconButton
+                icon="refresh"
                 mode="outlined"
-                dense
-                label={filter.label}
-                placeholder={filter.placeholder}
-                value={selectedFilters[filter.key] ?? ''}
-                onChangeText={(value) =>
-                  setSelectedFilters((current) => ({ ...current, [filter.key]: value }))
-                }
-                style={styles.filterTextInput}
+                accessibilityLabel="Refresh records"
+                onPress={() => void fetchItems()}
+                disabled={loading}
               />
-            ) : (
-              <SelectFilter
-                key={filter.key}
-                filter={filter}
-                value={selectedFilters[filter.key] ?? ''}
-                onChange={(value) =>
-                  setSelectedFilters((current) => ({ ...current, [filter.key]: value }))
-                }
-              />
-            ),
-          )}
-          {filters.length ? (
-            <Button mode="outlined" compact onPress={() => setSelectedFilters({})}>
-              Reset filters
-            </Button>
-          ) : null}
-          {showRefresh ? (
-            <Button mode="outlined" compact icon="refresh" onPress={() => void fetchItems()} disabled={loading}>
-              Refresh
-            </Button>
-          ) : null}
+            ) : null}
+          </View>
         </View>
       ) : null}
       <Text variant="bodySmall" style={[styles.count, { color: colors.textSecondary }]}>
@@ -151,17 +161,19 @@ export function EntityListScreen<T>({
 function SelectFilter({
   filter,
   value,
+  width,
   onChange,
 }: {
   filter: Extract<ListFilter, { type: 'select' }>;
   value: string;
+  width: number | `${number}%`;
   onChange: (value: string) => void;
 }) {
   const [visible, setVisible] = useState(false);
   const selectedLabel = filter.options.find((option) => option.value === value)?.label ?? filter.options[0]?.label ?? '';
 
   return (
-    <View style={styles.selectFilter}>
+    <View style={[styles.selectFilter, { width }]}>
       <Text variant="labelSmall" style={styles.selectLabel}>{filter.label}</Text>
       <Menu
         visible={visible}
@@ -174,7 +186,7 @@ function SelectFilter({
               editable={false}
               value={selectedLabel}
               right={<TextInput.Icon icon="menu-down" />}
-              style={styles.filterTextInput}
+              style={[styles.filterTextInput, { width }]}
             />
           </Pressable>
         }
@@ -198,26 +210,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  filterContainer: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
+  filterPanel: {
+    marginHorizontal: Spacing.three,
+    marginTop: Spacing.three,
+    marginBottom: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.two,
+    zIndex: 2,
+    elevation: 2,
+  },
+  filterFields: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.two,
   },
   filterTextInput: {
-    minWidth: 150,
-    flexGrow: 1,
+    height: 56,
   },
   selectFilter: {
-    minWidth: 150,
-    flexGrow: 1,
     gap: Spacing.one,
   },
   selectLabel: {
     paddingLeft: Spacing.one,
+  },
+  filterActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  resetButton: {
+    minHeight: 40,
+    justifyContent: 'center',
   },
   count: {
     paddingHorizontal: Spacing.four,
