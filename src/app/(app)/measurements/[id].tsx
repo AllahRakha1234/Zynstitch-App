@@ -1,11 +1,13 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchMeasurementById } from '@/api';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { BackArrowButton } from '@/components/shared/BackArrowButton';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { IMeasurement } from '@/types/measurements.types';
@@ -13,6 +15,7 @@ import type { IMeasurement } from '@/types/measurements.types';
 export default function MeasurementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useTheme();
+  const insets = useSafeAreaInsets();
   const [measurement, setMeasurement] = useState<IMeasurement | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,9 +35,13 @@ export default function MeasurementDetailScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.two }]}
     >
-      <Text variant="headlineSmall">{measurement.measurementName}</Text>
+      <View style={styles.pageTitle}>
+        <BackArrowButton fallbackHref="/measurements" />
+        <Text variant="headlineSmall" style={styles.title}>Measurement details</Text>
+      </View>
+      <Text variant="titleMedium">{measurement.measurementName}</Text>
       <Text variant="bodyMedium">{measurement.customerName}</Text>
       <Text variant="bodyMedium">Chest: {measurement.chest ?? '—'}</Text>
       <Text variant="bodyMedium">Waist: {measurement.waist ?? '—'}</Text>
@@ -51,5 +58,14 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.four,
     gap: Spacing.two,
+  },
+  pageTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    marginBottom: Spacing.one,
+  },
+  title: {
+    fontWeight: '700',
   },
 });

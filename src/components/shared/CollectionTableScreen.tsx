@@ -1,26 +1,27 @@
 import { useMemo, useState } from 'react';
 import {
-  Alert,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  View,
-  type KeyboardTypeOptions,
+    Alert,
+    Pressable,
+    ScrollView,
+    Share,
+    StyleSheet,
+    View,
+    type KeyboardTypeOptions,
 } from 'react-native';
 import {
-  Button,
-  Dialog,
-  IconButton,
-  Menu,
-  Portal,
-  Searchbar,
-  Switch,
-  Text,
-  TextInput,
+    Button,
+    Dialog,
+    IconButton,
+    Menu,
+    Portal,
+    Searchbar,
+    Switch,
+    Text,
+    TextInput,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BackArrowButton } from '@/components/shared/BackArrowButton';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSnackbar } from '@/providers/SnackbarProvider';
@@ -194,11 +195,14 @@ export function CollectionTableScreen({
   return (
     <View style={[styles.screen, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <View style={styles.pageHeader}>
-        <View style={styles.titleCopy}>
-          <Text variant="headlineSmall" style={styles.title}>{title}</Text>
-          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
-            {filteredRows.length} of {rows.length} records
-          </Text>
+        <View style={styles.pageTitleGroup}>
+          <BackArrowButton fallbackHref="/" />
+          <View style={styles.titleCopy}>
+            <Text variant="headlineSmall" style={styles.title}>{title}</Text>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
+              {filteredRows.length} of {rows.length} records
+            </Text>
+          </View>
         </View>
         <View style={styles.headerActions}>
           {canExport ? (
@@ -426,7 +430,8 @@ function StatusBadge({ value }: { value: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  pageHeader: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, paddingBottom: Spacing.one, gap: Spacing.two },
+  pageHeader: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, paddingBottom: Spacing.one, gap: Spacing.two, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  pageTitleGroup: { flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 },
   titleCopy: { gap: 2 },
   title: { fontWeight: '700' },
   headerActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
