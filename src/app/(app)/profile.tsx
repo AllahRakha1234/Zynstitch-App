@@ -4,6 +4,7 @@ import { Avatar, Button, Divider, SegmentedButtons, Text, TextInput } from 'reac
 import * as Yup from 'yup';
 
 import { changePassword, updateUserProfile } from '@/api';
+import { BackArrowButton } from '@/components/shared/BackArrowButton';
 import { PasswordField } from '@/components/shared/PasswordField';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -12,9 +13,11 @@ import { useSession } from '@/providers/AuthProvider';
 import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useThemeMode } from '@/providers/ThemeProvider';
 import { changePasswordSchema } from '@/validators/auth.validations';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const colors = useTheme();
+  const insets = useSafeAreaInsets();
   const { user, updateUser } = useSession();
   const { showSuccess, showError } = useSnackbar();
   const { mode, setMode, language, setLanguage } = useThemeMode();
@@ -70,8 +73,12 @@ export default function ProfileScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.two }]}
     >
+      <View style={styles.pageTitle}>
+        <BackArrowButton fallbackHref="/" />
+        <Text variant="headlineSmall" style={styles.pageTitleText}>Profile</Text>
+      </View>
       <View style={[styles.accountCard, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
         {profilePhotoUri ? (
           <Avatar.Image size={64} source={{ uri: profilePhotoUri }} />
@@ -180,6 +187,15 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.three,
     paddingBottom: Spacing.six,
+  },
+  pageTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    marginBottom: Spacing.one,
+  },
+  pageTitleText: {
+    fontWeight: '700',
   },
   accountCard: {
     flexDirection: 'row',

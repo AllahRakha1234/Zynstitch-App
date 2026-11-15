@@ -17,7 +17,7 @@ export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         headerTintColor: colors.primary,
         headerStyle: { backgroundColor: colors.surface },
         headerTitleStyle: { color: colors.text, fontWeight: '700' },
@@ -25,12 +25,12 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: colors.background },
       }}
     >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="measurements" options={{ headerShown: false }} />
-      <Stack.Screen name="jobs" />
-      <Stack.Screen name="profile" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="measurements" />
+      <Stack.Screen name="jobs" options={{ title: 'Jobs' }} />
+      <Stack.Screen name="profile" options={{ title: 'Profile' }} />
       <Stack.Protected guard={canManageUsers}>
-        <Stack.Screen name="users" />
+        <Stack.Screen name="users" options={{ title: 'Users' }} />
       </Stack.Protected>
     </Stack>
   );

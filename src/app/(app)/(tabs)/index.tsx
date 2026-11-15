@@ -6,6 +6,7 @@ import { ActivityIndicator, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchAllCustomers, fetchAllMeasurements, fetchAllOrders } from '@/api';
+import { BackArrowButton } from '@/components/shared/BackArrowButton';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSession } from '@/providers/AuthProvider';
@@ -70,9 +71,12 @@ export default function DashboardScreen() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.four }]}
     >
       <View style={styles.header}>
-        <View>
-          <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>Zynstitch overview</Text>
-          <Text variant="headlineSmall" style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'there'}</Text>
+        <View style={styles.titleGroup}>
+          <BackArrowButton fallbackHref="/customers" />
+          <View>
+            <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>Zynstitch overview</Text>
+            <Text variant="headlineSmall" style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'there'}</Text>
+          </View>
         </View>
         <View style={[styles.brandMark, { backgroundColor: colors.backgroundSelected }]}>
           <MaterialCommunityIcons name="content-cut" size={24} color={colors.primary} />
@@ -173,6 +177,7 @@ const styles = StyleSheet.create({
   page: { flex: 1 },
   content: { padding: Spacing.four, paddingTop: Spacing.five, paddingBottom: Spacing.six, gap: Spacing.three },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.one },
+  titleGroup: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: Spacing.one },
   greeting: { fontWeight: '700', marginTop: 2 },
   brandMark: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   welcomeCard: { borderRadius: 20, padding: Spacing.four, gap: Spacing.two },
