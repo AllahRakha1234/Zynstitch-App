@@ -72,7 +72,7 @@ export default function LoginScreen() {
       </Button>
 
       <Text variant="bodySmall" style={styles.hint}>
-        Demo: admin@zynstitch.com / password
+        Demo: admin@example.com / 123456
       </Text>
     </AuthScreen>
   );

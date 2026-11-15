@@ -38,29 +38,6 @@ export const mockUsers: IUser[] = [
   },
 ];
 
-export const mockCustomers: ICustomer[] = [
-  {
-    _id: 'cust-1',
-    ownerId: 'user-1',
-    name: 'Ali Khan',
-    phone: '+92-300-1111111',
-    email: 'ali@example.com',
-    address: 'Lahore',
-    createdAt: '2026-02-01T00:00:00.000Z',
-    updatedAt: '2026-02-01T00:00:00.000Z',
-  },
-  {
-    _id: 'cust-2',
-    ownerId: 'user-1',
-    name: 'Sara Ahmed',
-    phone: '+92-300-2222222',
-    email: 'sara@example.com',
-    address: 'Karachi',
-    createdAt: '2026-02-05T00:00:00.000Z',
-    updatedAt: '2026-02-05T00:00:00.000Z',
-  },
-];
-
 export const mockMeasurements: IMeasurement[] = [
   {
     _id: 'meas-1',
