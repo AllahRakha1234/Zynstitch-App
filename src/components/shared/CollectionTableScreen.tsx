@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     Pressable,
@@ -41,6 +41,17 @@ type TableColumn = {
   label: string;
   width?: number;
 };
+type RemoteListResult = {
+  success: boolean;
+  message: string;
+  items: readonly object[];
+  total: number;
+};
+type RemoteMutationResult = {
+  success: boolean;
+  message: string;
+  data: object | null;
+};
 
 type Props = {
   title: string;
@@ -55,6 +66,9 @@ type Props = {
   canDelete?: boolean;
   canView?: boolean;
   prepareRow?: (values: CollectionRow, existing: CollectionRow | null) => CollectionRow;
+  loadRows?: (search: string) => Promise<RemoteListResult>;
+  saveRowRemote?: (values: CollectionRow, existing: CollectionRow | null) => Promise<RemoteMutationResult>;
+  deleteRowRemote?: (id: string) => Promise<RemoteMutationResult>;
 };
 
 const ACTIONS_WIDTH = 156;
@@ -73,11 +87,19 @@ export function CollectionTableScreen({
   canDelete = true,
   canView = true,
   prepareRow,
+  loadRows,
+  saveRowRemote,
+  deleteRowRemote,
 }: Props) {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
   const { showSuccess, showError } = useSnackbar();
-  const [rows, setRows] = useState<CollectionRow[]>(() => initialData.map((item) => ({ ...item })));
+  const [rows, setRows] = useState<CollectionRow[]>(() =>
+    loadRows ? [] : initialData.map((item) => ({ ...item })),
+  );
+  const [total, setTotal] = useState(initialData.length);
+  const [loading, setLoading] = useState(Boolean(loadRows));
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [editingRow, setEditingRow] = useState<CollectionRow | null>(null);
   const [viewingRow, setViewingRow] = useState<CollectionRow | null>(null);
@@ -86,12 +108,38 @@ export function CollectionTableScreen({
 
   const tableWidth = columns.reduce((total, column) => total + (column.width ?? DEFAULT_COLUMN_WIDTH), 0) + ACTIONS_WIDTH;
   const filteredRows = useMemo(() => {
+    if (loadRows) return rows;
     const query = search.trim().toLowerCase();
     if (!query) return rows;
     return rows.filter((row) =>
       columns.some((column) => String(row[column.key] ?? '').toLowerCase().includes(query)),
     );
-  }, [columns, rows, search]);
+  }, [columns, loadRows, rows, search]);
+
+  const refreshRows = useCallback(async () => {
+    if (!loadRows) return;
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const response = await loadRows(search.trim());
+      if (!response.success) {
+        setLoadError(response.message || `Unable to load ${title.toLowerCase()}.`);
+        return;
+      }
+      setRows(response.items.map((row) => ({ ...row })));
+      setTotal(response.total);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : `Unable to load ${title.toLowerCase()}.`);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadRows, search, title]);
+
+  useEffect(() => {
+    if (!loadRows) return;
+    const timer = setTimeout(() => void refreshRows(), 250);
+    return () => clearTimeout(timer);
+  }, [loadRows, refreshRows]);
 
   const openCreate = () => {
     setEditingRow(null);
@@ -126,7 +174,7 @@ export function CollectionTableScreen({
     setFormValues({});
   };
 
-  const saveRow = () => {
+  const saveRow = async () => {
     const missing = fields.find((field) => field.required && !field.hideOnEdit && !String(formValues[field.key] ?? '').trim());
     if (missing) {
       showError(`${missing.label} is required.`);
@@ -142,7 +190,7 @@ export function CollectionTableScreen({
         return [key, value];
       }),
     );
-    const saved: CollectionRow = {
+    const localSaved: CollectionRow = {
       ...(editingRow ?? {}),
       ...convertedValues,
       _id: editingRow?._id ?? `${entity}-${Date.now()}-${rows.length}`,
@@ -152,6 +200,23 @@ export function CollectionTableScreen({
       ...(prepareRow?.(convertedValues, editingRow) ?? convertedValues),
     };
 
+    let saved = localSaved;
+    if (saveRowRemote) {
+      try {
+        const response = await saveRowRemote(convertedValues, editingRow);
+        if (!response.success || !response.data) {
+          showError(response.message || `Unable to save ${singularTitle.toLowerCase()}.`);
+          setSaving(false);
+          return;
+        }
+        saved = response.data as CollectionRow;
+      } catch (error) {
+        showError(error instanceof Error ? error.message : `Unable to save ${singularTitle.toLowerCase()}.`);
+        setSaving(false);
+        return;
+      }
+    }
+
     setRows((current) =>
       editingRow
         ? current.map((row) => (row._id === editingRow._id ? saved : row))
@@ -160,7 +225,9 @@ export function CollectionTableScreen({
     setSaving(false);
     setEditingRow(null);
     setFormValues({});
+    setTotal((current) => (editingRow ? current : current + 1));
     showSuccess(`${singularTitle} ${editingRow ? 'updated' : 'added'} successfully.`);
+    if (saveRowRemote && !editingRow) void refreshRows();
   };
 
   const removeRow = (row: CollectionRow) => {
@@ -169,9 +236,23 @@ export function CollectionTableScreen({
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: () => {
+        onPress: async () => {
+          if (deleteRowRemote && typeof row._id === 'string') {
+            try {
+              const response = await deleteRowRemote(row._id);
+              if (!response.success) {
+                showError(response.message || `Unable to delete ${singularTitle.toLowerCase()}.`);
+                return;
+              }
+            } catch (error) {
+              showError(error instanceof Error ? error.message : `Unable to delete ${singularTitle.toLowerCase()}.`);
+              return;
+            }
+          }
           setRows((current) => current.filter((item) => item._id !== row._id));
+          setTotal((current) => Math.max(0, current - 1));
           showSuccess(`${singularTitle} deleted.`);
+          if (deleteRowRemote) void refreshRows();
         },
       },
     ]);
@@ -200,7 +281,7 @@ export function CollectionTableScreen({
           <View style={styles.titleCopy}>
             <Text variant="headlineSmall" style={styles.title}>{title}</Text>
             <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
-              {filteredRows.length} of {rows.length} records
+              {filteredRows.length} of {total} records
             </Text>
           </View>
         </View>
@@ -224,6 +305,8 @@ export function CollectionTableScreen({
         onChangeText={setSearch}
         style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.outline }]}
       />
+      {loading ? <Text style={styles.loadState}>Loading {title.toLowerCase()}…</Text> : null}
+      {loadError ? <Text style={styles.loadError}>{loadError}</Text> : null}
 
       <ScrollView horizontal showsHorizontalScrollIndicator>
         <View style={[styles.table, { width: tableWidth, borderColor: colors.outline, backgroundColor: colors.surface }]}>
@@ -436,6 +519,8 @@ const styles = StyleSheet.create({
   title: { fontWeight: '700' },
   headerActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   search: { marginHorizontal: Spacing.three, marginBottom: Spacing.three, borderWidth: StyleSheet.hairlineWidth },
+  loadState: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.two },
+  loadError: { color: '#b3261e', paddingHorizontal: Spacing.three, paddingBottom: Spacing.two },
   table: { borderWidth: 1, borderRadius: 12, marginHorizontal: Spacing.three, marginBottom: Spacing.four, overflow: 'hidden' },
   tableHeader: { flexDirection: 'row', minHeight: 48, borderBottomWidth: 1, alignItems: 'center' },
   headerCell: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.two, fontWeight: '700' },

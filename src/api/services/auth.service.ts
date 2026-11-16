@@ -9,36 +9,6 @@ import type { IUserProfile, LoginFormValues, LoginResponseData } from '@/types/u
 export async function login(
   payload: LoginFormValues,
 ): Promise<ServiceResponse<LoginResponseData>> {
-  if (env.useMockApi) {
-    await mockDelay();
-    const email = payload.email.toLowerCase().trim();
-
-    if (email === mockProfile.email && payload.password === MOCK_PASSWORD) {
-      return {
-        success: true,
-        message: 'login.messages.loginSuccess',
-        data: {
-          token: 'mock-jwt-token',
-          user: mockProfile,
-        },
-      };
-    }
-
-    if (email === 'blocked@zynstitch.com') {
-      return {
-        success: false,
-        message: 'login.messages.accountBlocked',
-        data: null,
-      };
-    }
-
-    return {
-      success: false,
-      message: 'login.messages.invalidCredentials',
-      data: null,
-    };
-  }
-
   try {
     const { data } = await apiClient.post<ServiceResponse<LoginResponseData>>(
       endpoints.auth.login,
@@ -55,11 +25,6 @@ export async function login(
 }
 
 export async function logout(): Promise<ServiceResponse<null>> {
-  if (env.useMockApi) {
-    await mockDelay(200);
-    return { success: true, message: 'Logged out', data: null };
-  }
-
   try {
     const { data } = await apiClient.post<ServiceResponse<null>>(endpoints.auth.logout);
     return data;
@@ -73,15 +38,6 @@ export async function logout(): Promise<ServiceResponse<null>> {
 }
 
 export async function fetchCurrentUser(): Promise<ServiceResponse<IUserProfile>> {
-  if (env.useMockApi) {
-    await mockDelay(200);
-    return {
-      success: true,
-      message: 'OK',
-      data: mockProfile,
-    };
-  }
-
   try {
     const { data } = await apiClient.get<ServiceResponse<IUserProfile>>(endpoints.auth.me);
     return data;

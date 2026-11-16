@@ -4,15 +4,18 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useState,
   type PropsWithChildren,
 } from 'react';
 
-import { configureApiClient, fetchCurrentUser, login as loginRequest, logout as logoutRequest } from '@/api';
-import { useStorageState } from '@/hooks/use-storage-state';
+import {
+  clearNativeAccessToken,
+  configureApiClient,
+  fetchCurrentUser,
+  login as loginRequest,
+  logout as logoutRequest,
+} from '@/api';
 import type { IUserProfile, LoginFormValues } from '@/types/users.types';
-
-const SESSION_KEY = 'zynstitch.session';
-const PROFILE_KEY = 'zynstitch.profile';
 
 type AuthContextValue = {
   session: string | null;
@@ -35,56 +38,48 @@ export function useSession() {
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [[isSessionLoading, session], setSession] = useStorageState(SESSION_KEY);
-  const [[isProfileLoading, profileJson], setProfileJson] = useStorageState(PROFILE_KEY);
-
-  const user = useMemo<IUserProfile | null>(() => {
-    if (!profileJson) return null;
-    try {
-      return JSON.parse(profileJson) as IUserProfile;
-    } catch {
-      return null;
-    }
-  }, [profileJson]);
+  const [user, setUser] = useState<IUserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const clearSession = useCallback(() => {
-    setSession(null);
-    setProfileJson(null);
-  }, [setSession, setProfileJson]);
+    clearNativeAccessToken();
+    setUser(null);
+  }, []);
 
   useEffect(() => {
     configureApiClient({
-      getAccessToken: () => session,
       onUnauthorized: clearSession,
     });
-  }, [session, clearSession]);
+  }, [clearSession]);
 
   useEffect(() => {
-    if (!session || user) return;
+    let cancelled = false;
 
     (async () => {
       const response = await fetchCurrentUser();
+      if (cancelled) return;
       if (response.success && response.data) {
-        setProfileJson(JSON.stringify(response.data));
+        setUser(response.data);
       } else {
-        clearSession();
+        setUser(null);
       }
+      setIsLoading(false);
     })();
-  }, [session, user, setProfileJson, clearSession]);
 
-  const signIn = useCallback(
-    async (values: LoginFormValues) => {
-      const response = await loginRequest(values);
-      if (!response.success || !response.data) {
-        return { success: false, message: response.message };
-      }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-      setSession(response.data.token);
-      setProfileJson(JSON.stringify(response.data.user));
-      return { success: true, message: response.message };
-    },
-    [setSession, setProfileJson],
-  );
+  const signIn = useCallback(async (values: LoginFormValues) => {
+    const response = await loginRequest(values);
+    if (!response.success || !response.data) {
+      return { success: false, message: response.message };
+    }
+
+    setUser(response.data);
+    return { success: true, message: response.message };
+  }, []);
 
   const signOut = useCallback(async () => {
     try {
@@ -94,32 +89,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }, [clearSession]);
 
-  const updateUser = useCallback(
-    (profile: IUserProfile) => {
-      setProfileJson(JSON.stringify(profile));
-    },
-    [setProfileJson],
-  );
+  const updateUser = useCallback((profile: IUserProfile) => {
+    setUser(profile);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      session,
+      session: user?.id ?? null,
       user,
-      isLoading: isSessionLoading || isProfileLoading,
-      isAuthenticated: Boolean(session),
+      isLoading,
+      isAuthenticated: Boolean(user),
       signIn,
       signOut,
       updateUser,
     }),
-    [
-      session,
-      user,
-      isSessionLoading,
-      isProfileLoading,
-      signIn,
-      signOut,
-      updateUser,
-    ],
+    [user, isLoading, signIn, signOut, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

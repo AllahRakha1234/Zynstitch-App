@@ -1,26 +1,54 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { Platform } from 'react-native';
 
 import { env } from '@/config/env';
 
-type TokenGetter = () => string | null;
+const ACCESS_TOKEN_COOKIE = 'access_token';
+
 type UnauthorizedHandler = () => void;
 
-let getAccessToken: TokenGetter = () => null;
 let onUnauthorized: UnauthorizedHandler = () => undefined;
+let nativeAccessToken: string | null = null;
 
 export function configureApiClient(options: {
-  getAccessToken: TokenGetter;
   onUnauthorized?: UnauthorizedHandler;
 }) {
-  getAccessToken = options.getAccessToken;
   if (options.onUnauthorized) {
     onUnauthorized = options.onUnauthorized;
   }
 }
 
+export function clearNativeAccessToken() {
+  nativeAccessToken = null;
+}
+
+function readSetCookieHeader(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map(String);
+  return [String(value)];
+}
+
+function extractAccessToken(setCookieHeader: unknown): string | undefined | null {
+  const entries = readSetCookieHeader(setCookieHeader);
+  if (entries.length === 0) {
+    return undefined;
+  }
+
+  for (const entry of entries) {
+    const match = entry.match(new RegExp(`${ACCESS_TOKEN_COOKIE}=([^;]*)`));
+    if (!match) continue;
+    const value = match[1];
+    if (!value) return null;
+    return decodeURIComponent(value);
+  }
+
+  return undefined;
+}
+
 export const apiClient = axios.create({
   baseURL: env.apiUrl,
   timeout: 20000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -28,17 +56,38 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = getAccessToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (Platform.OS !== 'web' && nativeAccessToken) {
+    config.headers.Cookie = `${ACCESS_TOKEN_COOKIE}=${encodeURIComponent(nativeAccessToken)}`;
   }
   return config;
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (Platform.OS !== 'web') {
+      const token = extractAccessToken(response.headers['set-cookie']);
+      if (token) {
+        nativeAccessToken = token;
+      } else if (token === null) {
+        nativeAccessToken = null;
+      }
+    }
+    return response;
+  },
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    if (Platform.OS !== 'web') {
+      const token = extractAccessToken(error.response?.headers?.['set-cookie']);
+      if (token) {
+        nativeAccessToken = token;
+      }
+    }
+    const requestUrl = String(error.config?.url ?? '');
+    const isAuthHandshake =
+      requestUrl.includes('/api/auth/login') ||
+      requestUrl.includes('/api/auth/me') ||
+      requestUrl.includes('/api/auth/logout');
+    if (error.response?.status === 401 && !isAuthHandshake) {
+      nativeAccessToken = null;
       onUnauthorized();
     }
     return Promise.reject(error);

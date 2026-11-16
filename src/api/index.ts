@@ -1,4 +1,9 @@
-export { apiClient, configureApiClient, getErrorMessage } from '@/api/client';
+export {
+  apiClient,
+  clearNativeAccessToken,
+  configureApiClient,
+  getErrorMessage,
+} from '@/api/client';
 export { endpoints } from '@/api/endpoints';
 export * from '@/api/services/auth.service';
 export * from '@/api/services/customer.service';

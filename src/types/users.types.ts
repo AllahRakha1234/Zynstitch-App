@@ -54,14 +54,10 @@ export interface ChangePasswordFormValues {
 }
 
 export interface AuthSession {
-  token: string;
   user: IUserProfile;
 }
 
-export interface LoginResponseData {
-  token: string;
-  user: IUserProfile;
-}
+export type LoginResponseData = IUserProfile;
 
 export const ROLES: Record<string, UserRole> = {
   ADMIN: 'ADMIN',
