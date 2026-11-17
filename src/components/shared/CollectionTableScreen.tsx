@@ -276,7 +276,7 @@ export function CollectionTableScreen({
   return (
     <View style={[styles.screen, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <View style={styles.pageHeader}>
-        <View style={styles.pageTitleGroup}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.two }}>
           <BackArrowButton fallbackHref="/" />
           <View style={styles.titleCopy}>
             <Text variant="headlineSmall" style={styles.title}>{title}</Text>
@@ -285,7 +285,8 @@ export function CollectionTableScreen({
             </Text>
           </View>
         </View>
-        <View style={styles.headerActions}>
+
+        <View style={[styles.headerActions, { marginBottom: Spacing.two }]}>
           {canExport ? (
             <Button mode="outlined" icon="download-outline" onPress={() => void exportRows()} compact>
               Export
@@ -513,8 +514,8 @@ function StatusBadge({ value }: { value: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  pageHeader: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, paddingBottom: Spacing.one, gap: Spacing.two, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  pageTitleGroup: { flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 },
+  pageHeader: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, paddingBottom: Spacing.one, gap: Spacing.two, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' },
+  pageTitleGroup: { flexDirection: 'column', alignItems: 'flex-start', flex: 1, minWidth: 0, justifyContent: 'flex-start', width: '100%', gap: Spacing.two },
   titleCopy: { gap: 2 },
   title: { fontWeight: '700' },
   headerActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },

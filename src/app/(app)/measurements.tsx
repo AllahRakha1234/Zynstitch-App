@@ -1,22 +1,18 @@
-import { useEffect, useState } from 'react';
 import { deleteMeasurement, fetchAllCustomers, fetchAllMeasurements, saveMeasurement } from '@/api';
 import { CollectionTableScreen } from '@/components/shared/CollectionTableScreen';
+import type { ICustomer } from '@/types/customer.types';
 import type { IMeasurement } from '@/types/measurements.types';
+import { useEffect, useState } from 'react';
 
 export default function MeasurementsScreen() {
-  const [customers, setCustomers] = useState<{ label: string; value: string }[]>([]);
+  const [customers, setCustomers] = useState<ICustomer[]>([]);
   const today = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     (async () => {
       const response = await fetchAllCustomers(0, 100);
       if (response.success && response.data) {
-        setCustomers(
-          response.data.customers.map((c) => ({
-            label: c.name,
-            value: c._id ?? '',
-          })),
-        );
+        setCustomers(response.data.customers);
       }
     })();
   }, []);
@@ -59,7 +55,7 @@ export default function MeasurementsScreen() {
           label: 'Customer',
           type: 'select',
           required: true,
-          options: customers,
+          options: customers.map(c => ({ label: c.name, value: c._id ?? '' })),
         },
         { key: 'measurementDate', label: 'Measurement date', type: 'date', defaultValue: today },
         ...[
@@ -100,7 +96,14 @@ export default function MeasurementsScreen() {
         { key: 'waist', label: 'Waist', width: 100 },
         { key: 'notes', label: 'Notes', width: 180 },
       ]}
+      prepareRow={(values) => {
+        const customer = customers.find((item) => item._id === values.customerId);
+        return {
+          ...values,
+          customerName: customer?.name ?? '',
+          customerPhone: customer?.phone ?? '',
+        };
+      }}
     />
   );
 }
-
