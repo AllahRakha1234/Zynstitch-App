@@ -1,14 +1,57 @@
-import { mockCustomers, mockMeasurements } from '@/api/mock/data';
+import { useEffect, useState } from 'react';
+import { deleteMeasurement, fetchAllCustomers, fetchAllMeasurements, saveMeasurement } from '@/api';
 import { CollectionTableScreen } from '@/components/shared/CollectionTableScreen';
+import type { IMeasurement } from '@/types/measurements.types';
 
 export default function MeasurementsScreen() {
+  const [customers, setCustomers] = useState<{ label: string; value: string }[]>([]);
   const today = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    (async () => {
+      const response = await fetchAllCustomers(0, 100);
+      if (response.success && response.data) {
+        setCustomers(
+          response.data.customers.map((c) => ({
+            label: c.name,
+            value: c._id ?? '',
+          })),
+        );
+      }
+    })();
+  }, []);
+
+  const loadMeasurements = async (search: string) => {
+    const response = await fetchAllMeasurements(0, 50, search ? { search } : undefined);
+    return {
+      success: response.success,
+      message: response.message,
+      items: response.data?.measurements ?? [],
+      total: response.data?.total ?? 0,
+    };
+  };
+
   return (
     <CollectionTableScreen
       title="Measurements"
       singularTitle="Measurement"
       entity="measurements"
-      initialData={mockMeasurements}
+      initialData={[]}
+      loadRows={loadMeasurements}
+      saveRowRemote={async (values, existing) => {
+        const measurement: IMeasurement = {
+          ...values,
+          _id: typeof existing?._id === 'string' ? existing._id : undefined,
+          customerId: String(values.customerId ?? ''),
+          measurementName: String(values.measurementName ?? '').trim(),
+        };
+        const response = await saveMeasurement(measurement);
+        return { success: response.success, message: response.message, data: response.data };
+      }}
+      deleteRowRemote={async (id) => {
+        const response = await deleteMeasurement(id);
+        return { success: response.success, message: response.message, data: response.data };
+      }}
       fields={[
         { key: 'measurementName', label: 'Measurement name', type: 'text', required: true },
         {
@@ -16,7 +59,7 @@ export default function MeasurementsScreen() {
           label: 'Customer',
           type: 'select',
           required: true,
-          options: mockCustomers.map((customer) => ({ label: customer.name, value: customer._id ?? '' })),
+          options: customers,
         },
         { key: 'measurementDate', label: 'Measurement date', type: 'date', defaultValue: today },
         ...[
@@ -57,10 +100,7 @@ export default function MeasurementsScreen() {
         { key: 'waist', label: 'Waist', width: 100 },
         { key: 'notes', label: 'Notes', width: 180 },
       ]}
-      prepareRow={(values) => {
-        const customer = mockCustomers.find((item) => item._id === values.customerId);
-        return { ...values, customerName: customer?.name ?? '', customerPhone: customer?.phone ?? '' };
-      }}
     />
   );
 }
+

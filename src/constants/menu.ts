@@ -21,6 +21,7 @@ export type AppMenuActionItem = {
 export const BOTTOM_TABS = [
   { label: 'Dashboard', href: '/', icon: 'view-dashboard-outline' },
   { label: 'Customers', href: '/customers', icon: 'account-group' },
+  { label: 'Measurements', href: '/measurements', icon: 'ruler' },
   { label: 'Orders', href: '/orders', icon: 'package-variant' },
   { label: 'More', href: '/more', icon: 'menu' },
 ] as const satisfies readonly { label: string; href: string; icon: IconName }[];
@@ -32,7 +33,6 @@ export const MORE_MENU_SECTIONS: readonly {
   {
     title: 'Main navigation',
     items: [
-      { label: 'Measurements', href: '/measurements', icon: 'ruler' },
       { label: 'Jobs', href: '/jobs', icon: 'briefcase' },
     ],
   },
