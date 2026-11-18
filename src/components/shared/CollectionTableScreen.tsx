@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    Alert,
-    Pressable,
-    ScrollView,
-    Share,
-    StyleSheet,
-    View,
-    type KeyboardTypeOptions,
+  Alert,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  View,
+  type KeyboardTypeOptions,
 } from 'react-native';
 import {
-    Button,
-    Dialog,
-    IconButton,
-    Menu,
-    Portal,
-    Searchbar,
-    Switch,
-    Text,
-    TextInput,
+  Button,
+  Dialog,
+  IconButton,
+  Menu,
+  Portal,
+  Searchbar,
+  Switch,
+  Text,
+  TextInput,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
