@@ -65,6 +65,7 @@ type Props = {
   canEdit?: boolean;
   canDelete?: boolean;
   canView?: boolean;
+  renderExtraActions?: (row: CollectionRow) => React.ReactNode;
   prepareRow?: (values: CollectionRow, existing: CollectionRow | null) => CollectionRow;
   loadRows?: (search: string) => Promise<RemoteListResult>;
   saveRowRemote?: (values: CollectionRow, existing: CollectionRow | null) => Promise<RemoteMutationResult>;
@@ -87,6 +88,7 @@ export function CollectionTableScreen({
   canDelete = true,
   canView = true,
   prepareRow,
+  renderExtraActions,
   loadRows,
   saveRowRemote,
   deleteRowRemote,
@@ -349,6 +351,7 @@ export function CollectionTableScreen({
                   )
                 ))}
                 <View style={[styles.rowActions, { width: ACTIONS_WIDTH }]}>
+                  {renderExtraActions ? renderExtraActions(row) : null}
                   {canView ? (
                     <IconButton icon="eye-outline" size={19} accessibilityLabel={`View ${singularTitle}`} onPress={() => setViewingRow(row)} />
                   ) : null}
